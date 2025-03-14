@@ -1,19 +1,17 @@
 import { useFormik } from "formik";
-import { Alert, Snackbar, TextField } from "@mui/material";
+import { TextField } from "@mui/material";
 import { AddCustomerSchema } from "../../validationSchema/AddCustomerSchema";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "../../store/store";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../../store/store";
 import {
   addCustomer,
   getAllCustomer,
 } from "../../store/features/customer/customerSlice";
-import { useState } from "react";
+import { toast } from "react-toastify";
 
 function AddCustomer() {
   const dispatch = useDispatch<AppDispatch>();
-  const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState("");
-  const [severity, setSeverity] = useState<"success" | "error">("success");
+  const { loading } = useSelector((state: RootState) => state.customer);
 
   const submit = async (values: any, action: any) => {
     try {
@@ -22,22 +20,16 @@ function AddCustomer() {
         role: Number(values.role),
       };
 
-      await dispatch(addCustomer(formData));
+      // dispatch ve asenkron işlemler
+      await dispatch(addCustomer(formData)).unwrap();
       await dispatch(getAllCustomer());
       action.resetForm();
 
-      setMessage("Müşteri başarıyla eklendi!");
-      setSeverity("success");
-      setOpen(true);
+      // Not: Başarı bildirimi toast artık addCustomer thunk'ında yapılıyor
     } catch (error) {
-      console.error("Müşteri eklenirken bir hata oluştu:", error);
-      setMessage("Müşteri eklenirken bir hata oluştu");
-      setSeverity("error");
-      setOpen(true);
+      // Hata zaten axios interceptor tarafından işleniyor
+      console.error("Form gönderiminde hata:", error);
     }
-  };
-  const handleClose = () => {
-    setOpen(false);
   };
 
   const { values, handleChange, handleSubmit, errors } = useFormik({
@@ -67,11 +59,12 @@ function AddCustomer() {
             id="name"
             value={values.name}
             onChange={handleChange}
+            disabled={loading}
           />
           {errors.name && <p style={{ color: "red" }}>{errors.name}</p>}
         </div>
         <div>
-          <label htmlFor="surname ">Soyad</label>
+          <label htmlFor="surname">Soyad</label>
           <TextField
             fullWidth
             variant="standard"
@@ -80,6 +73,7 @@ function AddCustomer() {
             id="surname"
             value={values.surname}
             onChange={handleChange}
+            disabled={loading}
           />
           {errors.surname && <p style={{ color: "red" }}>{errors.surname}</p>}
         </div>
@@ -93,6 +87,7 @@ function AddCustomer() {
             id="email"
             value={values.email}
             onChange={handleChange}
+            disabled={loading}
           />
           {errors.email && <p style={{ color: "red" }}>{errors.email}</p>}
         </div>
@@ -106,6 +101,7 @@ function AddCustomer() {
             id="phone"
             value={values.phone}
             onChange={handleChange}
+            disabled={loading}
           />
         </div>
         <div>
@@ -118,6 +114,7 @@ function AddCustomer() {
             id="address"
             value={values.address}
             onChange={handleChange}
+            disabled={loading}
           />
         </div>
         <div>
@@ -130,6 +127,7 @@ function AddCustomer() {
             id="taxNumber"
             value={values.taxNumber}
             onChange={handleChange}
+            disabled={loading}
           />
         </div>
         <div>
@@ -142,21 +140,13 @@ function AddCustomer() {
             id="role"
             value={values.role}
             onChange={handleChange}
+            disabled={loading}
           />
         </div>
-        <button type="submit">Ekle</button>
+        <button type="submit" disabled={loading}>
+          {loading ? "Ekleniyor..." : "Ekle"}
+        </button>
       </form>
-
-      <Snackbar
-        open={open}
-        autoHideDuration={4000}
-        onClose={handleClose}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert onClose={handleClose} severity={severity}>
-          {message}
-        </Alert>
-      </Snackbar>
     </div>
   );
 }
