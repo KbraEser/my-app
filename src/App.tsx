@@ -1,7 +1,17 @@
 import "./App.css";
+import PageContainer from "./container/PageContainer";
+import Header from "./components/header/Header";
+import RouterConfig from "./config/RouterConfig";
 
 function App() {
-  return <div>Hadi bakalım bindik bir alamete</div>;
+  return (
+    <div>
+      <PageContainer>
+        <Header />
+        <RouterConfig />
+      </PageContainer>
+    </div>
+  );
 }
 
 export default App;
