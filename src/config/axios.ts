@@ -6,6 +6,7 @@ const api = axios.create({
   timeout: 15000,
 });
 
+// kimlik doğrulama token'larını eklemek için kullanılır
 api.interceptors.request.use(
   (config) => {
     return config;

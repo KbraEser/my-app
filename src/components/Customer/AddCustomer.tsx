@@ -24,10 +24,7 @@ function AddCustomer() {
       await dispatch(addCustomer(formData)).unwrap();
       await dispatch(getAllCustomer());
       action.resetForm();
-
-      // Not: Başarı bildirimi toast artık addCustomer thunk'ında yapılıyor
     } catch (error) {
-      // Hata zaten axios interceptor tarafından işleniyor
       console.error("Form gönderiminde hata:", error);
     }
   };

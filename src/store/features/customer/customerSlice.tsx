@@ -28,7 +28,6 @@ interface CustomerResponse {
 
 const initialState = {
   customers: [] as Customer[],
-  selectedCustomer: {} as Customer,
   loading: false,
   error: null as string | null,
   meta: {
@@ -36,8 +35,8 @@ const initialState = {
     pageSize: 0,
     totalCount: 0,
     totalPages: 0,
-    hasPreviousPage: false,
-    hasNextPage: false,
+    hasPreviousPage: true,
+    hasNextPage: true,
   },
 };
 
