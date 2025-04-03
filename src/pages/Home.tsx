@@ -1,14 +1,7 @@
-import React from "react";
-import CustomerList from "../components/Customer/CustomerList";
-import ProductList from "../components/Product/ProductList";
+import Header from "../components/header/Header";
 
 function Home() {
-  return (
-    <div>
-      <CustomerList />
-      <ProductList />
-    </div>
-  );
+  return <div>Home</div>;
 }
 
 export default Home;

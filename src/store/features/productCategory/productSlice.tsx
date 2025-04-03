@@ -1,6 +1,15 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { toast } from "react-toastify";
+
+// Kendi varyant tipimizi tanımlayalım
+export interface Variant {
+  model: string;
+  barcode: string;
+  imageUrl: string[];
+  criticalStockLevel: number;
+  isActive: boolean;
+}
 
 export interface Product {
   id: number;
@@ -18,7 +27,7 @@ export interface Product {
       barcode: string;
       model: string;
       criticalStockLevel: number;
-      imgUrl: string;
+      imgUrl: string[];
       isActive: boolean;
     }
   ];
@@ -44,7 +53,25 @@ interface ProductResponse {
   data: Product[];
 }
 
-const initialState = {
+interface ProductState {
+  products: Product[];
+  loading: boolean;
+  error: string | null;
+  meta: {
+    page: number;
+    pageSize: number;
+    totalCount: number;
+    totalPages: number;
+    hasPreviousPage: boolean;
+    hasNextPage: boolean;
+  };
+  // Form durumu için alan ekledik
+  formState: {
+    variants: Variant[];
+  };
+}
+
+const initialState: ProductState = {
   products: [] as Product[],
   loading: false,
   error: null as string | null,
@@ -56,8 +83,18 @@ const initialState = {
     hasPreviousPage: true,
     hasNextPage: true,
   },
+  formState: {
+    variants: [
+      {
+        model: "",
+        barcode: "",
+        imageUrl: [""],
+        criticalStockLevel: 0,
+        isActive: true,
+      },
+    ],
+  },
 };
-
 export const addProduct = createAsyncThunk(
   "addProduct",
   async (
@@ -79,10 +116,55 @@ export const addProduct = createAsyncThunk(
   }
 );
 
+export const getAllProduct = createAsyncThunk(
+  "getAllProduct",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get<ProductResponse>(
+        "https://stok-api-66a9f6c2f630.herokuapp.com/Product"
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue("Ürün listelenirken bir hata oluştu");
+    }
+  }
+);
+
 export const productSlice = createSlice({
   name: "product",
   initialState,
-  reducers: {},
+  reducers: {
+    addVariantToForm: (state) => {
+      const emptyVariant: Variant = {
+        model: "",
+        barcode: "",
+        imageUrl: [""],
+        criticalStockLevel: 0,
+        isActive: true,
+      };
+      state.formState.variants.push(emptyVariant);
+    },
+
+    removeVariantFromForm: (state, action: PayloadAction<number>) => {
+      if (state.formState.variants.length > 1) {
+        state.formState.variants.splice(action.payload, 1);
+      }
+    },
+
+    resetFormState: (state) => {
+      state.formState = {
+        variants: [
+          {
+            model: "",
+            barcode: "",
+            imageUrl: [""],
+            criticalStockLevel: 0,
+            isActive: true,
+          },
+        ],
+      };
+    },
+  },
   extraReducers: (builder) => {
     builder.addCase(addProduct.pending, (state) => {
       state.loading = true;
@@ -97,9 +179,24 @@ export const productSlice = createSlice({
       state.loading = false;
       state.error = action.payload as string;
     });
+
+    builder.addCase(getAllProduct.pending, (state) => {
+      state.loading = true;
+    });
+
+    builder.addCase(getAllProduct.fulfilled, (state, action) => {
+      state.loading = false;
+      state.products = action.payload.data;
+      state.meta = action.payload.meta;
+    });
+
+    builder.addCase(getAllProduct.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload as string;
+    });
   },
 });
 
-export const {} = productSlice.actions;
-
+export const { addVariantToForm, removeVariantFromForm, resetFormState } =
+  productSlice.actions;
 export default productSlice.reducer;
