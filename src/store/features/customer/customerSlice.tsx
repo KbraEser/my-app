@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { ValidationErrorDTO } from "../../../models/ValidationErrorDTO";
 
 export interface Customer {
   id: number;
@@ -14,6 +15,19 @@ export interface Customer {
   createdOn: string;
 }
 
+export interface CustomerState {
+  list: Customer[];
+  loading: boolean;
+  error: string | null;
+  validationError: ValidationErrorDTO | null;
+  totalCount: number | null;
+  searchQuery: string;
+  page: number;
+  pageSize: number;
+  sortField: string;
+  sortDirection: string;
+}
+
 interface CustomerResponse {
   meta: {
     page: number;
@@ -22,6 +36,9 @@ interface CustomerResponse {
     totalPages: number;
     hasPreviousPage: boolean;
     hasNextPage: boolean;
+    searchQuery: string;
+    sortField: string;
+    sortDirection: string;
   };
   data: Customer[];
 }
@@ -37,6 +54,9 @@ const initialState = {
     totalPages: 0,
     hasPreviousPage: true,
     hasNextPage: true,
+    searchQuery: "",
+    sortField: "",
+    sortDirection: "",
   },
 };
 
