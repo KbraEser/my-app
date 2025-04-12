@@ -1,30 +1,50 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { getAllCustomer } from "../../store/features/customer/customerSlice";
-import { AppDispatch, RootState } from "../../store/store";
-import { Customer as CustomerType } from "./Customer";
-import AddCustomer from "./AddCustomer";
-import "./CustomerList.scss";
-import { toast } from "react-toastify";
-import { DataGrid, GridColDef, GridPaginationModel, useGridApiRef } from "@mui/x-data-grid";
-import { StyledDataGrid } from "../../theme/styles/styledDataGrid";
-import { Alert, Snackbar } from "@mui/material";
-import { Customer, UserRoleLabels } from "../../models/Customer";
+import {
+  GridColDef,
+  GridPaginationModel,
+  GridSortModel,
+  useGridApiRef,
+} from "@mui/x-data-grid";
+import { UserRoleLabels } from "../../models/Customer";
+import { Customer } from "./Customer";
 import ActionMenu from "../common/ActionMenu";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../../store/store";
+import { useEffect, useState } from "react";
+import {
+  deleteCustomer,
+  fetchCustomers,
+} from "../../store/actions/customerActions";
+import { StyledDataGrid } from "../../theme/styles/styledDataGrid";
+import { SelectChangeEvent, Snackbar } from "@mui/material";
+import { Alert } from "@mui/material";
+import {
+  setPaginationModel,
+  setSortModel,
+} from "../../store/reducers/customerReducers";
+import {
+  downloadCustomers,
+  uploadCustomerFile,
+} from "../../services/customerService";
 
 const columns = (
   onDeleteCustomer: (id: number) => void,
-  handleUpdateCustomer: (customer: CustomerType) => void
+  handleUpdateCustomer: (customer: Customer) => void
 ): GridColDef[] => [
   {
     field: "id",
-    headerName: "MüşteriID",
+    headerName: "Müşteri ID",
     width: 100,
     editable: false,
   },
   {
     field: "name",
     headerName: "İsim",
+    minWidth: 130,
+    editable: false,
+  },
+  {
+    field: "surname",
+    headerName: "Soyisim",
     minWidth: 130,
     editable: false,
   },
@@ -57,18 +77,24 @@ const columns = (
   },
   {
     field: "role",
-    headerName: "Rol",
-    flex: 1,
-    minWidth: 180,
+    headerName: "Rolü",
+    minWidth: 150,
     editable: false,
     valueGetter: (params) => {
-      const role = params;
-      return role !== undefined ? UserRoleLabels[role] : "Bilinmeyen Rol";
+      const role = params; // Role'e eriş
+      return role !== undefined ? UserRoleLabels[role] : "Bilinmeyen Rol"; // Etiketi döndür
     },
   },
   {
-    field: "actions",
-    headerName: "İşlemler",
+    field: "createdOn",
+    headerName: "Kayıt Tarihi",
+    flex: 1,
+    minWidth: 150,
+    editable: false,
+  },
+  {
+    field: "action",
+    headerName: "İşlem",
     headerAlign: "right",
     align: "right",
     editable: false,
@@ -96,25 +122,19 @@ const columns = (
 
 const CustomerList = ({
   handleUpdateCustomer,
-}: {
-  handleUpdateCustomer: (customer: Customer) => void;
-}) => {
+}): { handleUpdateCustomer: (customer: Customer) => void } => {
   const apiRef = useGridApiRef();
   const dispatch = useDispatch<AppDispatch>();
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const searchQuery = useSelector(
-    (state: RootState) => state.customer.meta.searchQuery
+    (state: RootState) => state.customer.searchQuery
   );
-  const page = useSelector((state: RootState) => state.customer.meta.page);
-  const pageSize = useSelector(
-    (state: RootState) => state.customer.meta.pageSize
-  );
-  const sortField = useSelector(
-    (state: RootState) => state.customer.meta.sortField
-  );
+  const page = useSelector((state: RootState) => state.customer.page);
+  const pageSize = useSelector((state: RootState) => state.customer.pageSize);
+  const sortField = useSelector((state: RootState) => state.customer.sortField);
   const sortDirection = useSelector(
-    (state: RootState) => state.customer.meta.sortDirection
+    (state: RootState) => state.customer.sortDirection
   );
   const [paginationModel, setPaginationModelState] =
     useState<GridPaginationModel>({
@@ -122,40 +142,123 @@ const CustomerList = ({
       pageSize: pageSize,
     });
 
-  useEffect(()=>{
+  useEffect(() => {
     dispatch(
       fetchCustomers({
-        PageNumber:page,
-        PageSize:pageSize,
-        OrderBy:sortField,
-        Direction:sortDirection,
-        Search:searchQuery?.length > 2 ? searchQuery :"",
+        PageNumber: page + 1, // Backend için 1-based index
+        PageSize: pageSize,
+        OrderBy: sortField,
+        Direction: sortDirection,
+        Search: searchQuery?.length > 2 ? searchQuery : "",
       })
-    )
-  },[dispatch,searchQuery,paginationModel,sortField,sortDirection])
+    );
+  }, [dispatch, searchQuery, paginationModel, sortField, sortDirection]);
+
+  const handlePaginationChange = (newModel: GridPaginationModel) => {
+    setPaginationModelState(newModel);
+    dispatch(
+      setPaginationModel({ page: newModel.page, pageSize: newModel.pageSize })
+    );
+  };
+
+  const handleSortChange = (newSortModel: GridSortModel) => {
+    if (newSortModel.length > 0)
+      dispatch(
+        setSortModel({
+          sortField: newSortModel[0].field,
+          sortDirection: newSortModel[0].sort,
+        })
+      );
+  };
+
+  const customers = useSelector((state: RootState) => state.customer.list);
+  const totalRows = useSelector(
+    (state: RootState) => state.customer.totalCount
+  );
+  const loading = useSelector((state: RootState) => state.customer.loading);
+
+  const handleDeleteCustomer = (id: number) => {
+    dispatch(deleteCustomer(id));
+  };
+
+  const handlePageSizeChange = (event: SelectChangeEvent<number>) => {
+    setPaginationModelState({
+      page: 0,
+      pageSize: event.target.value as number,
+    });
+    dispatch(
+      setPaginationModel({ page: 0, pageSize: event.target.value as number })
+    );
+  };
+
+  const handleExport = async (format: string) => {
+    try {
+      const fileData = await downloadCustomers(format); // Yukarıda yazılan API çağrısı
+      const contentType =
+        format ===
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          : "text/csv";
+
+      const extension =
+        contentType ===
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          ? ".xlsx"
+          : ".csv";
+      const fileName = `müşteriler_${new Date()
+        .toISOString()
+        .slice(0, 19)
+        .replace("T", "_")}${extension}`;
+
+      // Dosyayı kaydet
+      const blob = new Blob([fileData], { type: contentType });
+      saveAs(blob, fileName);
+    } catch (error) {
+      console.error("Export failed:", error);
+    }
+  };
+
+  const handleFileUpload = async (file: File) => {
+    if (!file) return;
+
+    setUploadSuccess(false);
+    setUploadError(null);
+
+    try {
+      const response = await uploadCustomerFile(file); // Call the uploadFile service
+      if (response.status === 200) {
+        setUploadSuccess(true);
+      }
+    } catch (error) {
+      setUploadError("Müşteriler yüklenirken bir hata oluştu.");
+    }
+  };
 
   return (
     <>
       <StyledDataGrid
-        rows={customers}
-        columns={columns(handleDeleteCustomer, handleUpdateCustomer)}
+        initialState={{
+          pagination: { paginationModel: { pageSize: 5, page: 0 } },
+        }}
         loading={loading}
+        apiRef={apiRef}
         pagination
-        paginationMode="server"
-        sortingMode="server"
-        rowCount={totalCount}
+        columns={columns(handleDeleteCustomer, handleUpdateCustomer)}
+        rows={customers}
+        paginationMode="server" // Server-side pagination
+        sortingMode="server" // Server-side sorting
+        rowCount={totalRows ?? 0} // Total row count for pagination
         paginationModel={paginationModel}
-        onPaginationModelChange={setPaginationModel}
+        onPaginationModelChange={handlePaginationChange}
         onSortModelChange={handleSortChange}
-        paginationModel={paginationModel}
         rowHeight={50}
         disableColumnResize
         disableColumnMenu
-        disableRowSelectionOnClick
         disableColumnSelector
+        disableRowSelectionOnClick
         checkboxSelection={false}
         slots={{
-          footer: () => CustomDataGridFooter(handlePageSizeCharge),
+          footer: () => CustomDataGridFooter(handlePageSizeChange),
           toolbar: () => (
             <CustomToolbar
               onExport={handleExport}
@@ -164,6 +267,7 @@ const CustomerList = ({
           ),
         }}
       />
+      {/* Snackbar for success or error messages */}
       <Snackbar
         open={uploadSuccess}
         autoHideDuration={6000}
