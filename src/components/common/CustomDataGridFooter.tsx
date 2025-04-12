@@ -14,7 +14,7 @@ import {
   useGridSelector,
 } from "@mui/x-data-grid";
 
-const CustomDataGridFooter = (
+export const CustomDataGridFooter = (
   handlePageSizeChange: (event: SelectChangeEvent<number>) => void
 ) => {
   const apiRef = useGridApiContext();

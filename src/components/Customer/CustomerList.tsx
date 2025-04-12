@@ -25,6 +25,9 @@ import {
   downloadCustomers,
   uploadCustomerFile,
 } from "../../services/customerService";
+import { CustomDataGridFooter } from "../common/CustomDataGridFooter";
+import { saveAs } from "file-saver";
+import CustomToolbar from "../common/CustomToolbar";
 
 const columns = (
   onDeleteCustomer: (id: number) => void,
@@ -122,7 +125,9 @@ const columns = (
 
 const CustomerList = ({
   handleUpdateCustomer,
-}): { handleUpdateCustomer: (customer: Customer) => void } => {
+}: {
+  handleUpdateCustomer: (customer: Customer) => void;
+}) => {
   const apiRef = useGridApiRef();
   const dispatch = useDispatch<AppDispatch>();
   const [uploadSuccess, setUploadSuccess] = useState(false);
@@ -166,7 +171,7 @@ const CustomerList = ({
       dispatch(
         setSortModel({
           sortField: newSortModel[0].field,
-          sortDirection: newSortModel[0].sort,
+          sortDirection: newSortModel[0].sort as string,
         })
       );
   };
