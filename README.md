@@ -1,54 +1,44 @@
-# React + TypeScript + Vite
+RTK Customer & Product Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Overview
+A modern, responsive web application for efficient customer and product management built with React, TypeScript, and Redux Toolkit. This system provides a comprehensive solution for businesses looking to streamline their inventory and customer relationship management processes.
 
-Currently, two official plugins are available:
+✨ Features
+Customer Management
+Complete CRUD Operations — Create, read, update, and delete customer records
+Advanced Data Handling — Server-side pagination, sorting, and filtering
+Data Export — Export customer data in Excel or CSV formats
+Bulk Import — Upload multiple customer records via file import
+Validation — Robust form validation to ensure data integrity
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Product Management
+Product Catalog — Easily manage your product portfolio
+Variant Support — Add multiple variants to a single product
+Stock Control — Track inventory levels with critical stock alerts
+Active/Inactive Status — Manage product visibility status
+Category Integration — Organize products by categories
 
-## Expanding the ESLint configuration
+🚀 Technology Stack
+Frontend Framework: React with TypeScript
+State Management: Redux Toolkit
+UI Components: Material-UI
+Form Management: Formik with Yup validation
+HTTP Client: Axios
+Build Tool: Vite
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+📚 Usage Guidelines
+Customer Module
+Navigate to the Customers page to view the customer list
+Use the search bar to filter customers by name, email, or other attributes
+Click on action icons to edit or delete customer records
+Use the export button to download customer data
+Import customers via the upload button
+Product Module
+Add new products with detailed information including price, VAT rate, and description
+Create multiple variants for each product
+Set critical stock levels for inventory management
+Toggle active status for each variant
+Assign products to appropriate categories
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+🔧 Configuration
+The application connects to a backend API configured in the service files. Modify the base URL in the API configuration file if needed.
