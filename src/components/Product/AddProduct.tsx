@@ -18,30 +18,49 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 function AddProduct() {
   const dispatch = useDispatch<AppDispatch>();
   const { loading, formState } = useSelector(
     (state: RootState) => state.product
   );
+  const navigate = useNavigate();
 
   const submit = async (formValues: any, actions: any) => {
     try {
       const formData = {
-        ...formValues,
+        name: formValues.name,
+        description: formValues.description,
         price: Number(formValues.price),
         vatRate: Number(formValues.vatRate),
-        variants: formValues.variants.map((variant: any) => ({
-          ...variant,
+        categoryId: Number(formValues.categoryId),
+        isActive: true,
+        stoks: formValues.variants.map((variant: any) => ({
+          model: variant.model,
           criticalStockLevel: Number(variant.criticalStockLevel),
+          stockQuantity: 0
         })),
+        variants: formValues.variants.map((variant: any) => ({
+          code: variant.barcode,
+          name: formValues.name,
+          barcode: variant.barcode,
+          model: variant.model,
+          criticalStockLevel: Number(variant.criticalStockLevel),
+          imgUrl: [""],
+          isActive: variant.isActive
+        }))
       };
 
       await dispatch(addProduct(formData)).unwrap();
+      toast.success("Ürün başarıyla eklendi");
+      navigate('/products');
       dispatch(resetFormState());
       actions.resetForm();
     } catch (error) {
       console.error("Form gönderiminde hata:", error);
+      toast.error("Ürün eklenirken bir hata oluştu");
     }
   };
 
